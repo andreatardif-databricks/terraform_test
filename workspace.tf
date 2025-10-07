@@ -8,6 +8,18 @@ variable "gke_service_subnet" {}
 variable "gke_master_ip_range" {}
 variable "google_shared_vpc_project" {}
 
+# Data sources to get proper GCP resource identifiers
+data "google_compute_network" "vpc" {
+  name    = var.google_vpc_id
+  project = var.google_shared_vpc_project
+}
+
+data "google_compute_subnetwork" "subnet" {
+  name    = var.gke_node_subnet
+  region  = var.google_region
+  project = var.google_shared_vpc_project
+}
+
 
 resource "random_string" "databricks_suffix" {
   special = false
@@ -21,8 +33,8 @@ resource "databricks_mws_networks" "databricks_network" {
   network_name = "${var.google_shared_vpc_project}-nw-${random_string.databricks_suffix.result}"
   gcp_network_info {
     network_project_id    = var.google_shared_vpc_project
-    vpc_id                = "projects/${var.google_shared_vpc_project}/global/networks/${var.google_vpc_id}"
-    subnet_id             = "projects/${var.google_shared_vpc_project}/regions/${var.google_region}/subnetworks/${var.gke_node_subnet}"
+    vpc_id                = data.google_compute_network.vpc.self_link
+    subnet_id             = data.google_compute_subnetwork.subnet.self_link
     subnet_region         = var.google_region
   }
 }
