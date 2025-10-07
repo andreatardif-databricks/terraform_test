@@ -1,10 +1,9 @@
-variable "databricks_account_id" {}
 variable "databricks_google_service_account" {}
 variable "google_project_name" {}
 variable "google_region" {}
 
-variable "databricks_sp_client_id" {}
-variable "databricks_sp_client_secret" {}
+# Databricks authentication via environment variables only:
+# DATABRICKS_HOST, DATABRICKS_ACCOUNT_ID, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
 
 # impersonate_service_account = var.databricks_google_service_account
 
@@ -29,11 +28,9 @@ provider "google" {
 // initialize provider in "accounts" mode to provision new workspace
 
 provider "databricks" {
-  alias         = "accounts"
-  host          = "https://accounts.gcp.databricks.com"
-  account_id    = var.databricks_account_id
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
+  alias = "accounts"
+  # Configuration via environment variables:
+  # DATABRICKS_HOST, DATABRICKS_ACCOUNT_ID, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
 }
 
 # Workspace provider - uncomment after workspace is created if you need workspace-level operations
