@@ -60,13 +60,20 @@ steps:
         
         # Test credentials before Terraform
         echo "Testing Databricks credentials..."
-        curl -sS -f -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
+        RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
-          --data-urlencode "grant_type=client_credentials" \
-          --data-urlencode "client_id=9e52f02e-3246-4b6b-aca2-de6b7b849f4d" \
-          --data-urlencode "client_secret=dose078de60adfb9442b5d16caa7d2e85ecb" \ # gitleaks:allow
-          --data-urlencode "scope=all-apis" | jq '.expires_in'
-        echo "✅ Credentials work!"
+          -d "grant_type=client_credentials" \
+          -d "client_id=9e52f02e-3246-4b6b-aca2-de6b7b849f4d" \
+          -d "client_secret=dose078de60adfb9442b5d16caa7d2e85ecb" \ # gitleaks:allow
+          -d "scope=all-apis")
+        
+        if echo "$RESPONSE" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "✅ Credentials work! Token expires in: $(echo "$RESPONSE" | jq -r '.expires_in') seconds"
+        else
+          echo "❌ Credential test failed. Response:"
+          echo "$RESPONSE"
+          exit 1
+        fi
  
         echo "Creating Terraform plan..."
         terraform plan -out=tfplan
