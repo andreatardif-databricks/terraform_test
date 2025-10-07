@@ -1,4 +1,4 @@
-databricks_account_id = "e11e38c5-a449-47b9-b37f-0fa36c821612"
+# databricks_account_id = "e11e38c5-a449-47b9-b37f-0fa36c821612"
 databricks_account_console_url = "https://accounts.gcp.databricks.com"
 
 databricks_workspace_name = "at_terraform_cloudbuild" 
