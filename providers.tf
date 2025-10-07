@@ -36,8 +36,9 @@ provider "databricks" {
   client_secret = var.databricks_sp_client_secret
 }
 
-provider "databricks" {
-  host          = databricks_mws_workspaces.databricks_workspace.workspace_url
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
-}
+# Workspace provider - uncomment after workspace is created if you need workspace-level operations
+# provider "databricks" {
+#   host          = databricks_mws_workspaces.databricks_workspace.workspace_url
+#   client_id     = var.databricks_sp_client_id
+#   client_secret = var.databricks_sp_client_secret
+# }
