@@ -58,6 +58,10 @@ steps:
         export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        
+        # Terraform variables (what providers.tf expects)
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
 
         # Debug
         export TF_LOG=DEBUG
@@ -107,6 +111,10 @@ steps:
         export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        
+        # Terraform variables (what providers.tf expects)
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
 
         # Debug
         export TF_LOG=DEBUG
