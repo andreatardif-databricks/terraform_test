@@ -70,11 +70,11 @@ steps:
           --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
 
         # Fail fast if invalid_client
-        if echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
-          echo "Token OK (redacting)"; echo "$TOKEN_JSON" | jq 'del(.access_token)'
+        if echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "Token OK (redacting)"; echo "$$TOKEN_JSON" | jq 'del(.access_token)'
         else
           echo "ERROR: OAuth failed. Response:"
-          echo "$TOKEN_JSON"
+          echo "$$TOKEN_JSON"
           exit 1
         fi
 
@@ -113,9 +113,9 @@ steps:
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
           --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
-        if ! echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+        if ! echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
           echo "ERROR: OAuth failed. Response:"
-          echo "$TOKEN_JSON"
+          echo "$$TOKEN_JSON"
           exit 1
         fi
 
