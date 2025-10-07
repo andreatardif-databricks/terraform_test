@@ -108,14 +108,21 @@ steps:
         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
 
-        # Optional: re-check token before apply
+        # Debug
+        export TF_LOG=DEBUG
+        export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
+
+        echo "Pre-flight token test..."
         TOKEN_JSON="$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data-urlencode "grant_type=client_credentials" \
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
           --data-urlencode "scope=all-apis")"
-        if ! echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+
+        if echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "Token OK (redacted)"; echo "$$TOKEN_JSON" | jq 'del(.access_token)'
+        else
           echo "ERROR: OAuth failed. Response:"
           echo "$$TOKEN_JSON"
           exit 1
