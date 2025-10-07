@@ -50,14 +50,16 @@ steps:
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
         export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
         
-        # Set Databricks credentials using OAuth token method
+        # Set Databricks credentials for Terraform
         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
         export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
         
+        # Also set Databricks environment variables for the provider
+        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
         echo "Creating Terraform plan..."
-        terraform plan -out=tfplan \
-          -var="databricks_sp_client_id=9e52f02e-3246-4b6b-aca2-de6b7b849f4d" \
-          -var="databricks_sp_client_secret=dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        terraform plan -out=tfplan
 
   # Step 5: Apply Terraform (conditional on plan success)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
@@ -74,13 +76,17 @@ steps:
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
         
-        # Use service account impersonation (like your previous method)
+        # Authenticate with GCP using service account impersonation
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
         export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
         
-        # Set Databricks credentials using OAuth token method
+        # Set Databricks credentials for Terraform
         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
         export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
+        # Also set Databricks environment variables for the provider
+        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
         
         echo "Applying Terraform configuration..."
         terraform apply -auto-approve tfplan
