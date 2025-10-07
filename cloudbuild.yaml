@@ -71,7 +71,7 @@ steps:
           echo "✅ Credentials work! Token expires in: $(echo "$$RESPONSE" | jq -r '.expires_in') seconds"
         else
           echo "❌ Credential test failed. Response:"
-          echo "$RESPONSE"
+          echo "$$RESPONSE"
           exit 1
         fi
  
