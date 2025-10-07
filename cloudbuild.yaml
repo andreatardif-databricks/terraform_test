@@ -1,7 +1,7 @@
 steps:
   # Step 1: Set up Terraform
-  - id: 'terraform-setup'
   - name: 'hashicorp/terraform:1.5'
+    id: 'terraform-setup'
     entrypoint: 'sh'
     args:
       - '-c'
@@ -10,8 +10,8 @@ steps:
         terraform version
 
   # Step 2: Authenticate with GCP (automatic in Cloud Build)
-  - id: 'gcp-auth'
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'gcp-auth'
     entrypoint: 'bash'
     args:
       - '-lc'
@@ -22,8 +22,8 @@ steps:
         gcloud config list project --format="value(core.project)"
 
   # Step 3: Initialize Terraform
-  - id: 'terraform-init'
   - name: 'hashicorp/terraform:1.5'
+    id: 'terraform-init'
     entrypoint: 'sh'
     args:
       - '-c'
@@ -34,8 +34,8 @@ steps:
         terraform validate
 
   # Step 4: Create Terraform plan
-  - id: 'terraform-plan'
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'terraform-plan'
     entrypoint: 'bash'
     args:
       - '-lc'
@@ -58,21 +58,6 @@ steps:
         export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
-
-        # Sanity-check for hidden characters
-        printf 'ID   bytes: '; printf '%s' "$$DATABRICKS_CLIENT_ID" | wc -c
-        printf 'SECRET bytes: '; printf '%s' "$$DATABRICKS_CLIENT_SECRET" | wc -c
-        printf '%s' "$$DATABRICKS_CLIENT_SECRET" | xxd -p  # should show only printable bytes, no 0a at end
-
-        # Test A: no scope
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
-          -H 'Content-Type: application/x-www-form-urlencoded' \
-          --data "grant_type=client_credentials&client_id=$$DATABRICKS_CLIENT_ID&client_secret=$$DATABRICKS_CLIENT_SECRET" | jq .
-
-        # Test B: with scope (Databricks commonly uses this)
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
-          -H 'Content-Type: application/x-www-form-urlencoded' \
-          --data "grant_type=client_credentials&client_id=$$DATABRICKS_CLIENT_ID&client_secret=$$DATABRICKS_CLIENT_SECRET&scope=all-apis" | jq .
 
         # Debug
         export TF_LOG=DEBUG
@@ -98,8 +83,8 @@ steps:
         terraform plan -out=tfplan
 
   # Step 5: Apply Terraform (conditional on plan success)
-  - id: 'terraform-apply'
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'terraform-apply'
     entrypoint: 'bash'
     args:
       - '-lc'
