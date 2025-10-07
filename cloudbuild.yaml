@@ -66,8 +66,8 @@ steps:
         RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           -d "grant_type=client_credentials" \
-          -d "client_id=$CLIENT_ID" \
-          -d "client_secret=$CLIENT_SECRET" \
+          -d "client_id=$$CLIENT_ID" \
+          -d "client_secret=$$CLIENT_SECRET" \
           -d "scope=all-apis")
         
         if echo "$$RESPONSE" | jq -e '.access_token' >/dev/null 2>&1; then
