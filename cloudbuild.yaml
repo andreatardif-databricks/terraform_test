@@ -60,8 +60,8 @@ steps:
         
         # Test credentials before Terraform  
         echo "Testing Databricks credentials..."
-        CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        export CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
         
         RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
