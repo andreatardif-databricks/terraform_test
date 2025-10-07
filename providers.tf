@@ -29,15 +29,13 @@ provider "google" {
 // initialize provider in "accounts" mode to provision new workspace
 
 provider "databricks" {
-  alias         = "accounts"
-  host          = "https://accounts.gcp.databricks.com"
-  account_id    = var.databricks_account_id
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
+  alias                       = "accounts"
+  host                        = "https://accounts.gcp.databricks.com"
+  account_id                  = var.databricks_account_id
+  google_service_account      = var.databricks_google_service_account
 }
 
 provider "databricks" {
-  host          = databricks_mws_workspaces.databricks_workspace.workspace_url
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
+  host                   = databricks_mws_workspaces.databricks_workspace.workspace_url
+  google_service_account = var.databricks_google_service_account
 }
