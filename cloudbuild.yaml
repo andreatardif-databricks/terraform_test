@@ -1,58 +1,52 @@
 steps:
   # Step 1: Set up Terraform
-  - id: 'terraform-setup'
   - name: 'hashicorp/terraform:1.5'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
-        set -e
         echo "Setting up Terraform..."
         terraform version
 
-  # Step 2: Verify GCP auth (for your GCP ops only)
-  - id: 'gcp-auth'
+  # Step 2: Authenticate with GCP (automatic in Cloud Build)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
-      - '-c'
+      - '-lc'
       - |
-        set -e
+        set -euo pipefail
         echo "Verifying GCP authentication..."
         gcloud auth list --filter=status:ACTIVE --format="value(account)"
         gcloud config list project --format="value(core.project)"
 
   # Step 3: Initialize Terraform
-  - id: 'terraform-init'
   - name: 'hashicorp/terraform:1.5'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
-        set -e
         cd /workspace
         echo "Initializing Terraform..."
         terraform init
         terraform validate
 
   # Step 4: Create Terraform plan
-  - id: 'plan'
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
-      - '-c'
+      - '-lc'
       - |
-        set -e
+        set -euo pipefail
         cd /workspace
 
-        # Install Terraform (single binary)
+        # Install Terraform & tools
         apt-get update && apt-get install -y unzip wget jq
         wget -q https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
         unzip -q terraform_1.5.0_linux_amd64.zip
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
 
-        # GCP SA impersonation (for any GCP actions you do)
+        # GCP SA impersonation (for any GCP ops)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
@@ -71,38 +65,36 @@ steps:
           --data-urlencode "grant_type=client_credentials" \
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
-          --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
+          --data-urlencode "scope=all-apis")"
 
-        # Fail fast if invalid_client
-        if echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
-          echo "Token OK (redacting)"; echo "$$TOKEN_JSON" | jq 'del(.access_token)'
+        if echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "Token OK (redacted)"; echo "$TOKEN_JSON" | jq 'del(.access_token)'
         else
           echo "ERROR: OAuth failed. Response:"
-          echo "$$TOKEN_JSON"
+          echo "$TOKEN_JSON"
           exit 1
         fi
 
         echo "Creating Terraform plan..."
         terraform plan -out=tfplan
 
-  # Step 5: Apply Terraform (only runs if plan succeeded and token was valid)
-  - id: 'apply'
+  # Step 5: Apply Terraform (conditional on plan success)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     args:
-      - '-c'
+      - '-lc'
       - |
-        set -e
+        set -euo pipefail
         cd /workspace
 
-        # Install Terraform (single binary)
+        # Install Terraform & tools
         apt-get update && apt-get install -y unzip wget jq
         wget -q https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
         unzip -q terraform_1.5.0_linux_amd64.zip
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
 
-        # GCP SA impersonation (for any GCP actions you do)
+        # GCP SA impersonation (for any GCP ops)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
@@ -117,10 +109,10 @@ steps:
           --data-urlencode "grant_type=client_credentials" \
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
-          --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
-        if ! echo "$$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          --data-urlencode "scope=all-apis")"
+        if ! echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
           echo "ERROR: OAuth failed. Response:"
-          echo "$$TOKEN_JSON"
+          echo "$TOKEN_JSON"
           exit 1
         fi
 
