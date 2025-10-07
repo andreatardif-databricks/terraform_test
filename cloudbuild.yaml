@@ -32,14 +32,25 @@ steps:
         terraform validate
 
   # Step 4: Create Terraform plan
-  - name: 'hashicorp/terraform:1.5'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
         cd /workspace
         
-        # Set Databricks credentials directly
+        # Install Terraform
+        apt-get update && apt-get install -y unzip wget
+        wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+        unzip terraform_1.5.0_linux_amd64.zip
+        mv terraform /usr/local/bin/
+        chmod +x /usr/local/bin/terraform
+        
+        # Use service account impersonation (like your previous method)
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
+        
+        # Set Databricks credentials using OAuth token method
         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
         export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
         
@@ -49,14 +60,25 @@ steps:
           -var="databricks_sp_client_secret=dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
 
   # Step 5: Apply Terraform (conditional on plan success)
-  - name: 'hashicorp/terraform:1.5'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
         cd /workspace
         
-        # Set Databricks credentials directly
+        # Install Terraform
+        apt-get update && apt-get install -y unzip wget
+        wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+        unzip terraform_1.5.0_linux_amd64.zip
+        mv terraform /usr/local/bin/
+        chmod +x /usr/local/bin/terraform
+        
+        # Use service account impersonation (like your previous method)
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
+        
+        # Set Databricks credentials using OAuth token method
         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
         export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
         
