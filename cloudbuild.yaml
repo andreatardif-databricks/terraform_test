@@ -5,15 +5,17 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         echo "Setting up Terraform..."
         terraform version
 
-  # Step 2: Authenticate with GCP (automatic in Cloud Build)
+  # Step 2: Verify GCP auth (for your GCP ops only)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
+        set -e
         echo "Verifying GCP authentication..."
         gcloud auth list --filter=status:ACTIVE --format="value(account)"
         gcloud config list project --format="value(core.project)"
@@ -24,6 +26,7 @@ steps:
     args:
       - '-c'
       - |
+        set -e
         cd /workspace
         echo "Initializing Terraform..."
         terraform init
@@ -35,16 +38,17 @@ steps:
     args:
       - '-c'
       - |
+        set -euo pipefail
         cd /workspace
 
-        # Install Terraform
-        apt-get update && apt-get install -y unzip wget
-        wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
-        unzip terraform_1.5.0_linux_amd64.zip
+        # Install Terraform (single binary)
+        apt-get update && apt-get install -y unzip wget jq
+        wget -q https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+        unzip -q terraform_1.5.0_linux_amd64.zip
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
 
-        # GCP SA impersonation (used for GCP only)
+        # GCP SA impersonation (for any GCP actions you do)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
@@ -57,33 +61,43 @@ steps:
         export TF_LOG=DEBUG
         export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
 
-        # Pre-flight token test (use $$ so Cloud Build doesn't substitute)
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
+        echo "Pre-flight token test..."
+        TOKEN_JSON="$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data-urlencode "grant_type=client_credentials" \
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
-          --data-urlencode "scope=all-apis" | sed 's/".*token":"[^"]*"/"token":"<redacted>"/'
+          --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
+
+        # Fail fast if invalid_client
+        if echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "Token OK (redacting)"; echo "$TOKEN_JSON" | jq 'del(.access_token)'
+        else
+          echo "ERROR: OAuth failed. Response:"
+          echo "$TOKEN_JSON"
+          exit 1
+        fi
 
         echo "Creating Terraform plan..."
         terraform plan -out=tfplan
 
-  # Step 5: Apply Terraform (conditional on plan success)
+  # Step 5: Apply Terraform (only runs if plan succeeded and token was valid)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     entrypoint: 'sh'
     args:
       - '-c'
       - |
+        set -euo pipefail
         cd /workspace
 
-        # Install Terraform
-        apt-get update && apt-get install -y unzip wget
-        wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
-        unzip terraform_1.5.0_linux_amd64.zip
+        # Install Terraform (single binary)
+        apt-get update && apt-get install -y unzip wget jq
+        wget -q https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+        unzip -q terraform_1.5.0_linux_amd64.zip
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
 
-        # GCP SA impersonation (used for GCP only)
+        # GCP SA impersonation (for any GCP actions you do)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
@@ -92,17 +106,18 @@ steps:
         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
 
-        # Debug
-        export TF_LOG=DEBUG
-        export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
-
-        # Pre-flight token test (use $$ so Cloud Build doesn't substitute)
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
+        # Optional: re-check token before apply
+        TOKEN_JSON="$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data-urlencode "grant_type=client_credentials" \
           --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
           --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
-          --data-urlencode "scope=all-apis" | sed 's/".*token":"[^"]*"/"token":"<redacted>"/'
+          --data-urlencode "scope=all-apis")" || { echo "Token endpoint unreachable"; exit 1; }
+        if ! echo "$TOKEN_JSON" | jq -e '.access_token' >/dev/null 2>&1; then
+          echo "ERROR: OAuth failed. Response:"
+          echo "$TOKEN_JSON"
+          exit 1
+        fi
 
         echo "Applying Terraform configuration..."
         terraform apply -auto-approve tfplan
