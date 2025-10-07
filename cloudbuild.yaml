@@ -52,7 +52,7 @@ steps:
         
         # Set Databricks credentials (service principal works, service account doesn't)
         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        export TF_VAR_databricks_sp_client_secret="dose15c764842cf0098c7c1d21d3af9a35f7" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
         
         # Enable debug logging for Databricks provider
         export TF_LOG=DEBUG
