@@ -50,7 +50,14 @@ steps:
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
         export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
         
-        # Databricks will use Google Service Account authentication via OAuth token
+        # Set Databricks credentials (service principal works, service account doesn't)
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
+        # Enable debug logging for Databricks provider
+        export TF_LOG=DEBUG
+        export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
+        
         echo "Creating Terraform plan..."
         terraform plan -out=tfplan
 
@@ -73,7 +80,14 @@ steps:
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
         export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
         
-        # Databricks will use Google Service Account authentication via OAuth token
+        # Set Databricks credentials (service principal works, service account doesn't)
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
+        # Enable debug logging for Databricks provider
+        export TF_LOG=DEBUG
+        export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
+        
         echo "Applying Terraform configuration..."
         terraform apply -auto-approve tfplan
         
