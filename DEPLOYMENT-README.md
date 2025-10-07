@@ -16,7 +16,7 @@ This directory contains Terraform configuration and Cloud Build setup to deploy 
 
 The following credentials are already configured in `cloudbuild.yaml`:
 - `databricks_sp_client_id`: `9e52f02e-3246-4b6b-aca2-de6b7b849f4d` <!-- gitleaks:allow -->
-- `databricks_sp_client_secret`: `dose88c6c1b3f2571d5c97314c8a7313bf78` <!-- gitleaks:allow -->
+- `databricks_sp_client_secret`: `dose078de60adfb9442b5d16caa7d2e85ecb` <!-- gitleaks:allow -->
 
 ### 2. Setup Permissions
 

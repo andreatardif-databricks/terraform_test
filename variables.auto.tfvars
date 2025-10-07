@@ -15,7 +15,7 @@ google_project_name          = "fe-dev-sandbox"
 google_shared_vpc_project    = "fe-dev-sandbox" 
 google_region                = "us-east1" 
 databricks_sp_client_id      = "9e52f02e-3246-4b6b-aca2-de6b7b849f4d"
-databricks_sp_client_secret  = "dose88c6c1b3f2571d5c97314c8a7313bf78" #gitleaks:allow
+databricks_sp_client_secret  = "dose078de60adfb9442b5d16caa7d2e85ecb" #gitleaks:allow
 
 # export DATABRICKS_CONFIG_PROFILE=databricks-gcp-account
 # gcloud auth login
