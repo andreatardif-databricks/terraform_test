@@ -27,8 +27,6 @@ steps:
         cd /workspace
         echo "Initializing Terraform..."
         terraform init
-        
-        # Validate configuration
         terraform validate
 
   # Step 4: Create Terraform plan
@@ -38,32 +36,33 @@ steps:
       - '-c'
       - |
         cd /workspace
-        
+
         # Install Terraform
         apt-get update && apt-get install -y unzip wget
         wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
         unzip terraform_1.5.0_linux_amd64.zip
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
-        
+
+        # GCP SA impersonation (used for GCP only)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
         export DATABRICKS_HOST="https://accounts.gcp.databricks.com"
         export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
-        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
 
-        # (Optional) debug
+        # Debug
         export TF_LOG=DEBUG
         export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
 
-        # Pre-flight prove the creds (remove after it passes once)
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/${DATABRICKS_ACCOUNT_ID}/v1/token" \
+        # Pre-flight token test (use $$ so Cloud Build doesn't substitute)
+        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data-urlencode "grant_type=client_credentials" \
-          --data-urlencode "client_id=${DATABRICKS_CLIENT_ID}" \
-          --data-urlencode "client_secret=${DATABRICKS_CLIENT_SECRET}" \
+          --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
+          --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
           --data-urlencode "scope=all-apis" | sed 's/".*token":"[^"]*"/"token":"<redacted>"/'
 
         echo "Creating Terraform plan..."
@@ -76,7 +75,7 @@ steps:
       - '-c'
       - |
         cd /workspace
-        
+
         # Install Terraform
         apt-get update && apt-get install -y unzip wget
         wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
@@ -84,31 +83,31 @@ steps:
         mv terraform /usr/local/bin/
         chmod +x /usr/local/bin/terraform
 
+        # GCP SA impersonation (used for GCP only)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
         # Databricks Accounts OAuth (authoritative)
         export DATABRICKS_HOST="https://accounts.gcp.databricks.com"
         export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
-        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d"  # gitleaks:allow
         export DATABRICKS_CLIENT_SECRET="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
 
-        # (Optional) debug
+        # Debug
         export TF_LOG=DEBUG
         export DATABRICKS_DEBUG_TRUNCATE_BYTES=10000
 
-        # Pre-flight prove the creds (remove after it passes once)
-        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/${DATABRICKS_ACCOUNT_ID}/v1/token" \
+        # Pre-flight token test (use $$ so Cloud Build doesn't substitute)
+        curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$${DATABRICKS_ACCOUNT_ID}/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           --data-urlencode "grant_type=client_credentials" \
-          --data-urlencode "client_id=${DATABRICKS_CLIENT_ID}" \
-          --data-urlencode "client_secret=${DATABRICKS_CLIENT_SECRET}" \
+          --data-urlencode "client_id=$${DATABRICKS_CLIENT_ID}" \
+          --data-urlencode "client_secret=$${DATABRICKS_CLIENT_SECRET}" \
           --data-urlencode "scope=all-apis" | sed 's/".*token":"[^"]*"/"token":"<redacted>"/'
 
         echo "Applying Terraform configuration..."
         terraform apply -auto-approve tfplan
-        
+
         echo "Terraform apply completed successfully!"
-        
-        # Output the Databricks workspace URL
+
         echo "Databricks Workspace URL:"
         terraform output databricks_host
