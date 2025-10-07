@@ -21,8 +21,8 @@ resource "databricks_mws_networks" "databricks_network" {
   network_name = "${var.google_shared_vpc_project}-nw-${random_string.databricks_suffix.result}"
   gcp_network_info {
     network_project_id    = var.google_shared_vpc_project
-    vpc_id                = var.google_vpc_id
-    subnet_id             = var.gke_node_subnet
+    vpc_id                = "projects/${var.google_shared_vpc_project}/global/networks/${var.google_vpc_id}"
+    subnet_id             = "projects/${var.google_shared_vpc_project}/regions/${var.google_region}/subnetworks/${var.gke_node_subnet}"
     subnet_region         = var.google_region
   }
 }
