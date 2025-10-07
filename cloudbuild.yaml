@@ -1,0 +1,77 @@
+steps:
+  # Step 1: Set up Terraform
+  - name: 'hashicorp/terraform:1.5'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "Setting up Terraform..."
+        terraform version
+
+  # Step 2: Authenticate with GCP (automatic in Cloud Build)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "Verifying GCP authentication..."
+        gcloud auth list --filter=status:ACTIVE --format="value(account)"
+        gcloud config list project --format="value(core.project)"
+
+  # Step 3: Initialize Terraform
+  - name: 'hashicorp/terraform:1.5'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Initializing Terraform..."
+        terraform init
+        
+        # Validate configuration
+        terraform validate
+
+  # Step 4: Create Terraform plan
+  - name: 'hashicorp/terraform:1.5'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        # Set Databricks credentials directly
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
+        echo "Creating Terraform plan..."
+        terraform plan -out=tfplan \
+          -var="databricks_sp_client_id=9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow \
+          -var="databricks_sp_client_secret=dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow # gitleaks:allow
+
+  # Step 5: Apply Terraform (conditional on plan success)
+  - name: 'hashicorp/terraform:1.5'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        # Set Databricks credentials directly
+        export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+        export TF_VAR_databricks_sp_client_secret="dose88c6c1b3f2571d5c97314c8a7313bf78" # gitleaks:allow
+        
+        echo "Applying Terraform configuration..."
+        terraform apply -auto-approve tfplan
+        
+        echo "Terraform apply completed successfully!"
+        
+        # Output the Databricks workspace URL
+        echo "Databricks Workspace URL:"
+        terraform output databricks_host
+
+
+# Logging configuration (optional - remove if bucket doesn't exist)
+# logsBucket: 'gs://fe-dev-sandbox-cloudbuild-logs'
+
+# Service account (optional - specify if you need a custom service account)
+# serviceAccount: 'projects/YOUR_PROJECT_ID/serviceAccounts/cloudbuild-terraform@YOUR_PROJECT_ID.iam.gserviceaccount.com'
