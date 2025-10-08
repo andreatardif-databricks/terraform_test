@@ -12,7 +12,7 @@ steps:
         set -euo pipefail
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         ACCESS_TOKEN="$(gcloud auth print-access-token)"
-        printf '%s' "$ACCESS_TOKEN" > /workspace/google_access_token.txt
+        printf '%s' "$$ACCESS_TOKEN" > /workspace/google_access_token.txt
 
   # 2) Terraform init/plan/apply in the hashicorp image, reading the token file
   - id: terraform-init
@@ -21,7 +21,7 @@ steps:
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
         terraform init -upgrade
 
   - id: terraform-plan
@@ -30,7 +30,7 @@ steps:
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
         terraform plan -input=false -compact-warnings -out=tfplan.out
 
   - id: terraform-apply
@@ -39,6 +39,6 @@ steps:
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
         export TF_LOG=INFO
         terraform apply -input=false -auto-approve tfplan.out
