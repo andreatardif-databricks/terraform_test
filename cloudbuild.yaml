@@ -1,15 +1,4 @@
 steps:
-  # Step 0: Auth Databricks using the CLI
-  - id: databricks-auth
-    name: ghcr.io/databricks/cli:latest
-    args:
-      - auth
-      - login
-      - --host
-      - https://accounts.gcp.databricks.com
-      - --account-id
-      - e11e38c5-a449-47b9-b37f-0fa36c821612 # gitleaks:allow
-
   # Step 1: Initialize Terraform
   - id: terraform-init
     name: hashicorp/terraform:1.6.6
