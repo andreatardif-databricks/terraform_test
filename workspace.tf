@@ -6,32 +6,23 @@ variable "gke_node_subnet" {}
 variable "gke_pod_subnet" {}
 variable "gke_service_subnet" {}
 variable "gke_master_ip_range" {}
-variable "google_shared_vpc_project" {}
 
-
-resource "random_string" "databricks_suffix" {
-  special = false
-  upper   = false
-  length  = 6
-}
-
-resource "databricks_mws_networks" "databricks_network" {
+resource "databricks_mws_networks" "this" {
   provider     = databricks.accounts
   account_id   = var.databricks_account_id
   network_name = "${var.google_shared_vpc_project}-nw-${random_string.databricks_suffix.result}"
   gcp_network_info {
-    network_project_id    = var.google_shared_vpc_project
+    network_project_id    = var.google_project_name
     vpc_id                = var.google_vpc_id
     subnet_id             = var.gke_node_subnet
     subnet_region         = var.google_region
   }
 }
 
-// create workspace in given VPC
-resource "databricks_mws_workspaces" "databricks_workspace" {
+resource "databricks_mws_workspaces" "this" {
   provider       = databricks.accounts
   account_id     = var.databricks_account_id
-  workspace_name = var.databricks_workspace_name
+  workspace_name = "tf-demo-test-${random_string.suffix.result}"
   location       = var.google_region
   cloud_resource_container {
     gcp {
@@ -39,9 +30,9 @@ resource "databricks_mws_workspaces" "databricks_workspace" {
     }
   }
 
-  network_id = databricks_mws_networks.databricks_network.network_id
+  network_id = databricks_mws_networks.this.network_id
 }
 
 output "databricks_host" {
-  value = databricks_mws_workspaces.databricks_workspace.workspace_url
+  value = databricks_mws_workspaces.this.workspace_url
 }

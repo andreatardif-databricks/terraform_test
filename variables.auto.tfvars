@@ -12,7 +12,6 @@ gke_master_ip_range = "10.3.0.0/28"
 
 databricks_google_service_account = "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
 google_project_name          = "fe-dev-sandbox" 
-google_shared_vpc_project    = "fe-dev-sandbox" 
 google_region                = "us-east1" 
 databricks_sp_client_id      = "9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
 databricks_sp_client_secret  = "dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow

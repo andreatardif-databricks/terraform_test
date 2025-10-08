@@ -6,11 +6,9 @@ variable "databricks_sp_client_id" {}
 variable "databricks_sp_client_secret" {}
 
 terraform {
-  required_version = ">= 1.5.0"
   required_providers {
     databricks = {
-      source  = "databricks/databricks"
-      version = "~> 1.50"   # or a newer stable in your env
+      source = "databricks/databricks"
     }
     google = {
       source  = "hashicorp/google"
@@ -19,18 +17,28 @@ terraform {
   }
 }
 
-
-provider "databricks" {
-  alias                      = "accounts"
-  host                       = "https://accounts.gcp.databricks.com"
-  account_id                 = var.databricks_account_id
-  auth_type                  = "google-oidc"
-  google_service_account     = var.databricks_google_service_account
+provider "google" {
+  project = var.google_project_name
+  region  = var.google_region
 }
 
+// initialize provider in "accounts" mode to provision new workspace
+
 provider "databricks" {
-  alias                      = "workspace"
-  host                       = databricks_mws_workspaces.databricks_workspace.workspace_url
-  auth_type                  = "google-oidc"
-  google_service_account     = var.databricks_google_service_account
+  alias                  = "accounts"
+  host                   = "https://accounts.gcp.databricks.com"
+  google_service_account = var.databricks_google_service_account
+  account_id             = var.databricks_account_id
+}
+
+data "google_client_openid_userinfo" "me" {
+}
+
+data "google_client_config" "current" {
+}
+
+resource "random_string" "suffix" {
+  special = false
+  upper   = false
+  length  = 6
 }
