@@ -4,28 +4,13 @@ substitutions:
 
 steps:
   # Install terraform once
-  - id: setup-terraform
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: bash
-    args:
-      - -lc
-      - |
-        set -euo pipefail
-        mkdir -p /workspace/bin
-        curl -fsSL "https://releases.hashicorp.com/terraform/${_TF_VERSION}/terraform_${_TF_VERSION}_linux_amd64.zip" -o /workspace/terraform.zip
-        unzip -o /workspace/terraform.zip -d /workspace/bin
-        /workspace/bin/terraform -version
-
-  # terraform init
-  - id: terraform-init
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: bash
-    args:
-      - -lc
-      - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+  - id: terraform-init 
+    name: hashicorp/terraform:1.6.6 
+    entrypoint: sh 
+    args: 
+      - -lc 
+      - | 
+        echo "Initializing Terraform..." 
         terraform init -upgrade
 
   # terraform plan
