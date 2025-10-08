@@ -8,7 +8,7 @@ steps:
       - |
         set -euo pipefail
         mkdir -p /workspace/bin
-        curl -fsSL "https://releases.hashicorp.com/terraform/${_TF_VERSION}/terraform_$${_TF_VERSION}_linux_amd64.zip" -o /workspace/terraform.zip
+        curl -fsSL "https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip" -o /workspace/terraform.zip
         unzip -o /workspace/terraform.zip -d /workspace/bin >/dev/null
         /workspace/bin/terraform -version
 
@@ -40,8 +40,8 @@ steps:
 
   # 3) terraform init
   - id: terraform-init
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    entrypoint: bash
+    name: hashicorp/terraform:1.6.6
+    entrypoint: sh
     args:
       - -lc
       - |
