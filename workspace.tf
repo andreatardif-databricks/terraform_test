@@ -13,8 +13,8 @@ resource "databricks_mws_networks" "this" {
   network_name = "fe-dev-sandbox-nw-d8epy1"
   gcp_network_info {
     network_project_id = "fe-dev-sandbox"
-    vpc_id             = "projects/fe-dev-sandbox/global/networks/hk-network-6e7ehf"
-    subnet_id          = "projects/fe-dev-sandbox/regions/us-east1/subnetworks/hk-test-dbx-6e7ehf"
+    vpc_id             = "hk-network-6e7ehf"
+    subnet_id          = "hk-test-dbx-6e7ehf"
     subnet_region      = "us-east1"
   }
 }
