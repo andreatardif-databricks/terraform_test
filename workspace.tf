@@ -1,21 +1,18 @@
 variable "databricks_account_console_url" {}
 variable "databricks_workspace_name" {}
-variable "databricks_admin_user" {}
 variable "google_vpc_id" {}
-variable "gke_node_subnet" {}
-variable "gke_pod_subnet" {}
-variable "gke_service_subnet" {}
-variable "gke_master_ip_range" {}
+variable "google_subnet_id" {}
+variable "google_region" {}
 
 resource "databricks_mws_networks" "this" {
   provider     = databricks.accounts
   account_id   = var.databricks_account_id
   network_name = "fe-dev-sandbox-nw-d8epy1"
   gcp_network_info {
-    network_project_id = "fe-dev-sandbox"
-    vpc_id             = "hk-network-6e7ehf"
-    subnet_id          = "hk-test-dbx-6e7ehf"
-    subnet_region      = "us-east1"
+    network_project_id = var.google_project_name
+    vpc_id             = var.google_vpc_id
+    subnet_id          = var.google_subnet_id
+    subnet_region      = var.google_region
   }
 }
 

@@ -1,9 +1,6 @@
 variable "databricks_account_id" {}
 variable "databricks_google_service_account" {}
 variable "google_project_name" {}
-variable "google_region" {}
-variable "databricks_sp_client_id" {}
-variable "databricks_sp_client_secret" {}
 
 terraform {
   required_providers {
@@ -18,17 +15,15 @@ terraform {
 }
 
 provider "google" {
-  project                    = "fe-dev-sandbox"
-  impersonate_service_account = "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+  project                     = var.google_project_name
+  impersonate_service_account = var.databricks_google_service_account
 }
-
-// initialize provider in "accounts" mode to provision new workspace
 
 provider "databricks" {
   alias                  = "accounts"
   host                   = "https://accounts.gcp.databricks.com"
   account_id             = var.databricks_account_id
-  google_service_account = "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+  google_service_account = var.databricks_google_service_account
 }
 
 resource "random_string" "suffix" {

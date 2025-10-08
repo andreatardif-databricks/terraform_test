@@ -1,9 +1,8 @@
 options:
       logging: CLOUD_LOGGING_ONLY
 steps:
-    # 1) Terraform as you already have it
-  - name: hashicorp/terraform:1.6.6
-    id: terraform-apply
+  - id: terraform-init
+    name: hashicorp/terraform:1.6.6
     env:
       - GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
     entrypoint: sh
@@ -12,6 +11,25 @@ steps:
       - |
         export TF_LOG=DEBUG
         terraform init
+
+  - id: terraform-plan
+    name: hashicorp/terraform:1.6.6
+    env:
+      - GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+    entrypoint: sh
+    args:
+      - -lc
+      - |
+        export TF_LOG=DEBUG
         terraform plan -out=tfplan
-        terraform state rm databricks_mws_workspaces.this
+
+  - id: terraform-apply
+    name: hashicorp/terraform:1.6.6
+    env:
+      - GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+    entrypoint: sh
+    args:
+      - -lc
+      - |
+        export TF_LOG=DEBUG
         terraform apply -auto-approve
