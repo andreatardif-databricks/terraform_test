@@ -9,7 +9,20 @@ steps:
         echo "Initializing Terraform..."
         terraform init -upgrade
 
-  # Step 2: Validate the Terraform configuration
+# Step 2: Auth GCP
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'gcp-auth'
+    entrypoint: sh
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+        echo "Verifying GCP authentication..."
+        gcloud auth login
+        export DATABRICKS_CONFIG_PROFILE=databricks-gcp-account
+        databricks auth login --profile databricks-gcp-account
+
+  # Step 3: Validate the Terraform configuration
   - id: terraform-validate
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
@@ -19,7 +32,7 @@ steps:
         echo "Validating Terraform configuration..."
         terraform validate
 
-  # Step 3: Generate Terraform plan and save it to a file
+  # Step 4: Generate Terraform plan and save it to a file
   - id: terraform-plan
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
@@ -29,7 +42,7 @@ steps:
         echo "Running Terraform plan..."
         terraform plan -input=false -compact-warnings -out=tfplan.out
 
-  # Step 4: Apply the saved plan automatically
+  # Step 5: Apply the saved plan automatically
   - id: terraform-apply
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
