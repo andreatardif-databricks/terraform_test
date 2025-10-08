@@ -1,15 +1,40 @@
 steps:
-  - id: terraform init
+  # Step 1: Initialize Terraform
+  - id: terraform-init
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
-    args: ["-lc", "terraform init -upgrade"]
+    args:
+      - -lc
+      - |
+        echo "Initializing Terraform..."
+        terraform init -upgrade
 
-  - id: terraform validate
+  # Step 2: Validate the Terraform configuration
+  - id: terraform-validate
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
-    args: ["-lc", "terraform validate"]
+    args:
+      - -lc
+      - |
+        echo "Validating Terraform configuration..."
+        terraform validate
 
-  - id: terraform plan
+  # Step 3: Generate Terraform plan and save it to a file
+  - id: terraform-plan
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
-    args: ["-lc", "terraform plan -input=false -compact-warnings"]
+    args:
+      - -lc
+      - |
+        echo "Running Terraform plan..."
+        terraform plan -input=false -compact-warnings -out=tfplan.out
+
+  # Step 4: Apply the saved plan automatically
+  - id: terraform-apply
+    name: hashicorp/terraform:1.6.6
+    entrypoint: sh
+    args:
+      - -lc
+      - |
+        echo "Applying Terraform plan..."
+        terraform apply -input=false -auto-approve tfplan.out
