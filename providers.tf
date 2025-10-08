@@ -19,24 +19,18 @@ terraform {
   }
 }
 
-# Account-scoped provider (MWS APIs)
-provider "databricks" {
-  alias         = "accounts"
-  host          = "https://accounts.gcp.databricks.com"
-  account_id    = var.databricks_account_id
 
-  # Force client-credentials (prevents auto-detecting Google OIDC on GCP)
-  auth_type     = "oauth-m2m"
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
+provider "databricks" {
+  alias                      = "accounts"
+  host                       = "https://accounts.gcp.databricks.com"
+  account_id                 = var.databricks_account_id
+  auth_type                  = "google-oidc"
+  google_service_account     = var.databricks_google_service_account
 }
 
-# Workspace-scoped provider (use only after workspace exists)
 provider "databricks" {
-  alias         = "workspace"
-  host          = databricks_mws_workspaces.databricks_workspace.workspace_url
-
-  auth_type     = "oauth-m2m"
-  client_id     = var.databricks_sp_client_id
-  client_secret = var.databricks_sp_client_secret
+  alias                      = "workspace"
+  host                       = databricks_mws_workspaces.databricks_workspace.workspace_url
+  auth_type                  = "google-oidc"
+  google_service_account     = var.databricks_google_service_account
 }
