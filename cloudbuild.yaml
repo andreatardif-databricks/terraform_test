@@ -54,7 +54,6 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        export PATH="/workspace/bin:$PATH"
         gcloud config set auth/impersonate_service_account $${_TARGET_SA}
         export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
         terraform init -upgrade
@@ -67,7 +66,6 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        export PATH="/workspace/bin:$PATH"
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
         export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
@@ -81,7 +79,6 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        export PATH="/workspace/bin:$PATH"
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
         export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
