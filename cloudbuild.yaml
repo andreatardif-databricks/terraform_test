@@ -29,14 +29,14 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        test -n "${TF_VAR_databricks_sp_client_id:-}" || { echo "Missing TF_VAR_databricks_sp_client_id"; exit 1; }
-        test -n "${TF_VAR_databricks_sp_client_secret:-}" || { echo "Missing TF_VAR_databricks_sp_client_secret"; exit 1; }
+        test -n "$${TF_VAR_databricks_sp_client_id:-}" || { echo "Missing TF_VAR_databricks_sp_client_id"; exit 1; }
+        test -n "$${TF_VAR_databricks_sp_client_secret:-}" || { echo "Missing TF_VAR_databricks_sp_client_secret"; exit 1; }
         CODE=$(curl -sS -o /tmp/token.json -w "%{http_code}" \
-          -u "$TF_VAR_databricks_sp_client_id:$TF_VAR_databricks_sp_client_secret" \
+          -u "$${TF_VAR_databricks_sp_client_id:$${TF_VAR_databricks_sp_client_secret}}" \
           -d "grant_type=client_credentials&scope=all-apis" \
           https://accounts.gcp.databricks.com/oidc/token || true)
-        if [ "$CODE" != "200" ]; then
-          echo "Failed to mint token (HTTP $CODE). Check OAuth app client_id/secret and account access."
+        if [ "$${CODE}" != "200" ]; then
+          echo "Failed to mint token (HTTP $${CODE}). Check OAuth app client_id/secret and account access."
           cat /tmp/token.json || true
           exit 1
         fi
