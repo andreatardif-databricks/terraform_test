@@ -11,7 +11,7 @@ terraform {
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "~> 1.50"   # or newer stable you prefer
+      version = "~> 1.50" 
     }
     google = {
       source  = "hashicorp/google"

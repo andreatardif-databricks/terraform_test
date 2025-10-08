@@ -12,15 +12,14 @@ steps:
 # Step 2: Auth GCP
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'gcp-auth'
-    entrypoint: sh
+    entrypoint: 'bash'
     args:
-      - -lc
+      - '-lc'
       - |
         set -euo pipefail
         echo "Verifying GCP authentication..."
-        gcloud auth login
-        export DATABRICKS_CONFIG_PROFILE=databricks-gcp-account
-        databricks auth login --profile databricks-gcp-account
+        gcloud auth list --filter=status:ACTIVE --format="value(account)"
+        gcloud config list project --format="value(core.project)"
 
   # Step 3: Validate the Terraform configuration
   - id: terraform-validate
