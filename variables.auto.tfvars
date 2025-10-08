@@ -10,7 +10,8 @@ gke_pod_subnet = "pods"
 gke_service_subnet = "svc"
 gke_master_ip_range = "10.3.0.0/28"
 
-databricks_google_service_account = "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+# databricks_google_service_account = "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+databricks_google_service_account = "697856052963@cloudbuild.gserviceaccount.com"
 google_project_name          = "fe-dev-sandbox" 
 google_region                = "us-east1" 
 databricks_sp_client_id      = "9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
