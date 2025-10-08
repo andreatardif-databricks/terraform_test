@@ -7,14 +7,26 @@ variable "gke_pod_subnet" {}
 variable "gke_service_subnet" {}
 variable "gke_master_ip_range" {}
 
+# Get full GCP resource paths for Databricks
+data "google_compute_network" "this" {
+  name    = var.google_vpc_id
+  project = var.google_project_name
+}
+
+data "google_compute_subnetwork" "this" {
+  name    = var.gke_node_subnet
+  region  = var.google_region
+  project = var.google_project_name
+}
+
 resource "databricks_mws_networks" "this" {
   provider     = databricks.accounts
   account_id   = var.databricks_account_id
   network_name = "${var.google_project_name}-nw-${random_string.suffix.result}"
   gcp_network_info {
     network_project_id    = var.google_project_name
-    vpc_id                = var.google_vpc_id
-    subnet_id             = var.gke_node_subnet
+    vpc_id                = data.google_compute_network.this.self_link
+    subnet_id             = data.google_compute_subnetwork.this.self_link
     subnet_region         = var.google_region
   }
 }
