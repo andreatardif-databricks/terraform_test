@@ -2,79 +2,35 @@ options:
       logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # 0) Install Terraform into /workspace/bin (persists across steps)
-  - id: setup-terraform
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    entrypoint: bash
-    args:
-      - -lc
-      - |
-        set -euo pipefail
-        apt-get update && apt-get install -y unzip
-        mkdir -p /workspace/bin
-        curl -fsSL "https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip" -o /workspace/terraform.zip
-        unzip -o /workspace/terraform.zip -d /workspace/bin >/dev/null
-        /workspace/bin/terraform -version
-
-  # 1) Impersonate your deployer SA and stash a fresh access token
-  - id: auth-check
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    entrypoint: bash
-    args:
-      - -lc
-      - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        ACCESS_TOKEN="$$(gcloud auth print-access-token)"
-        printf '%s' "$${ACCESS_TOKEN}" > /workspace/google_access_token.txt
-
-  # 2) (Optional but useful) verify subnet & secondary range names
-  - id: network-verify
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
-    entrypoint: bash
-    args:
-      - -lc
-      - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        echo "Describing subnet hk-test-dbx-6e7ehf in us-east1 (project fe-dev-sandbox)..."
-        gcloud compute networks subnets describe "hk-test-dbx-6e7ehf" \
-          --region="us-east1" --project="fe-dev-sandbox" \
-          --format="yaml(name,region,network,secondaryIpRanges)"
-
-  # 3) terraform init
+  # 1) terraform init
   - id: terraform-init
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
     args:
       - -lc
       - |
+        echo "Initializing Terraform configuration..."
+        export TF_LOG=DEBUG
         terraform init -upgrade
 
-  # 4) terraform plan
+  # 2) terraform plan
   - id: terraform-plan
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    name: hashicorp/terraform:1.6.6
     entrypoint: bash
     args:
       - -lc
       - |
-         set -euo pipefail
-         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-         export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
-         
+         echo "Planning Terraform configuration..."
          export TF_LOG=DEBUG
-         /workspace/bin/terraform plan -input=false -compact-warnings -out=tfplan.out
+         terraform plan -input=false -compact-warnings -out=tfplan.out
 
-  # 5) terraform apply
+  # 3) terraform apply
   - id: terraform-apply
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    name: hashicorp/terraform:1.6.6
     entrypoint: bash
     args:
       - -lc
       - |
-         set -euo pipefail
-         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-         export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
-         
-         export TF_LOG=DEBUG
-         /workspace/bin/terraform apply -input=false -auto-approve tfplan.out
+        echo "Applying Terraform configuration..."
+        export TF_LOG=DEBUG
+        terraform apply -input=false -auto-approve tfplan.out
