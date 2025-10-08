@@ -2,18 +2,16 @@ options:
       logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - id: whoami
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: verify-oidc
     entrypoint: bash
     args:
       - -lc
       - |
-        curl -s -H "Metadata-Flavor: Google" \
-          http://metadata/computeMetadata/v1/instance/service-accounts/default/email
-        echo
-        gcloud auth list
-        echo "Sample identity token (truncated):"
-        gcloud auth print-identity-token | cut -c1-40
+        gcloud auth print-identity-token \
+          --impersonate-service-account=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com \
+          --audiences=https://accounts.google.com \
+          --include-email | cut -c1-80 && echo '...'
         
   # 1) terraform init
   - id: terraform-init
