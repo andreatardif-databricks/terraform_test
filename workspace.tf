@@ -22,7 +22,7 @@ resource "databricks_mws_networks" "this" {
 resource "databricks_mws_workspaces" "this" {
   provider       = databricks.accounts
   account_id     = var.databricks_account_id
-  workspace_name = var.databricks_workspace_name
+  workspace_name = "${var.databricks_workspace_name}-${random_string.suffix.result}"
   location       = var.google_region
   cloud_resource_container {
     gcp {
