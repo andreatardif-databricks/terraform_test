@@ -32,4 +32,5 @@ steps:
       - -lc
       - |
         export TF_LOG=DEBUG
+        terraform state rm databricks_mws_workspaces.this
         terraform apply -auto-approve
