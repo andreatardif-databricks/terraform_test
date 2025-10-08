@@ -1,6 +1,6 @@
 options:
-      logging: CLOUD_LOGGING_ONLY
-      
+      logging: NONE
+
 steps:
   # 0) Install Terraform into /workspace/bin (persists across steps)
   - id: setup-terraform
