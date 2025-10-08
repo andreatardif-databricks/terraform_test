@@ -7,11 +7,10 @@ variable "databricks_sp_client_secret" {}
 
 terraform {
   required_version = ">= 1.5.0"
-
   required_providers {
     databricks = {
       source  = "databricks/databricks"
-      version = "~> 1.50" 
+      version = "~> 1.50"   # or a newer stable in your env
     }
     google = {
       source  = "hashicorp/google"
@@ -20,20 +19,23 @@ terraform {
   }
 }
 
-# Account-scoped provider (used to create MWS resources)
+# Account-scoped provider (MWS APIs)
 provider "databricks" {
   alias         = "accounts"
   host          = "https://accounts.gcp.databricks.com"
   account_id    = var.databricks_account_id
+
+  # Force client-credentials (prevents auto-detecting Google OIDC on GCP)
   auth_type     = "oauth-m2m"
   client_id     = var.databricks_sp_client_id
   client_secret = var.databricks_sp_client_secret
 }
 
-# Workspace-scoped provider (used AFTER the workspace exists)
+# Workspace-scoped provider (use only after workspace exists)
 provider "databricks" {
   alias         = "workspace"
   host          = databricks_mws_workspaces.databricks_workspace.workspace_url
+
   auth_type     = "oauth-m2m"
   client_id     = var.databricks_sp_client_id
   client_secret = var.databricks_sp_client_secret

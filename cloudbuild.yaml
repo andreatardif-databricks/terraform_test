@@ -39,7 +39,7 @@ steps:
       - -lc
       - |
         echo "Running Terraform plan..."
-        terraform plan -input=false -compact-warnings -out=tfplan.out
+        terraform plan  -input=false -compact-warnings -out=tfplan.out
 
   # Step 5: Apply the saved plan automatically
   - id: terraform-apply
