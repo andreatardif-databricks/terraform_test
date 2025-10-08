@@ -30,7 +30,6 @@ provider "databricks" {
   account_id             = var.databricks_account_id
   client_id              = var.databricks_sp_client_id
   client_secret          = var.databricks_sp_client_secret
-  google_service_account = var.databricks_google_service_account
 }
 
 data "google_client_openid_userinfo" "me" {
