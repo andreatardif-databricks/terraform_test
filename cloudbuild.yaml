@@ -13,4 +13,5 @@ steps:
         export TF_LOG=DEBUG
         terraform init
         terraform plan -out=tfplan
+        terraform state rm databricks_mws_workspaces.this
         terraform apply -auto-approve
