@@ -8,15 +8,23 @@ variable "gke_service_subnet" {}
 variable "gke_master_ip_range" {}
 variable "google_shared_vpc_project" {}
 
-# We don't need random suffix or data sources since using existing network
-# resource "random_string" "databricks_suffix" removed
-# data sources removed since not creating network
 
-# Use existing Databricks network instead of creating new one
-# Service principal lacks permission to create networks, but existing ones work
-locals {
-  # Use first available existing network for this VPC
-  existing_network_id = "6a1a267a-a1a3-4a4f-9de7-a1be326cc2f6"
+resource "random_string" "databricks_suffix" {
+  special = false
+  upper   = false
+  length  = 6
+}
+
+resource "databricks_mws_networks" "databricks_network" {
+  provider     = databricks.accounts
+  account_id   = var.databricks_account_id
+  network_name = "${var.google_shared_vpc_project}-nw-${random_string.databricks_suffix.result}"
+  gcp_network_info {
+    network_project_id    = var.google_shared_vpc_project
+    vpc_id                = var.google_vpc_id
+    subnet_id             = var.gke_node_subnet
+    subnet_region         = var.google_region
+  }
 }
 
 // create workspace in given VPC
@@ -31,7 +39,7 @@ resource "databricks_mws_workspaces" "databricks_workspace" {
     }
   }
 
-  network_id = local.existing_network_id
+  network_id = databricks_mws_networks.databricks_network.network_id
 }
 
 output "databricks_host" {

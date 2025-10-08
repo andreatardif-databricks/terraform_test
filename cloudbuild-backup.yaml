@@ -53,22 +53,25 @@ steps:
         # GCP SA impersonation (for any GCP ops)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
-        # Databricks provider environment variables (clean approach - only env vars)
-        export DATABRICKS_HOST="https://accounts.gcp.databricks.com" # gitleaks:allow
-        export TF_VAR_databricks_account_id="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
-        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        # Databricks configuration (defined once, used by both provider and workspace)
+        ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
+        CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow 
+        CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        
+        # Set both TF_VAR (for workspace resource) and DATABRICKS env vars (for provider)
+        export TF_VAR_databricks_account_id="$ACCOUNT_ID"
+        export DATABRICKS_HOST="https://accounts.gcp.databricks.com"
+        export DATABRICKS_ACCOUNT_ID="$ACCOUNT_ID"
+        export DATABRICKS_CLIENT_ID="$CLIENT_ID" 
+        export DATABRICKS_CLIENT_SECRET="$CLIENT_SECRET"
         
         # Test credentials before Terraform  
-        echo "Testing Databricks credentials..."
-        export CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        export CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
-        
-        RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
+        echo "Testing Databricks credentials..."        
+        RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$ACCOUNT_ID/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           -d "grant_type=client_credentials" \
-          -d "client_id=$$CLIENT_ID" \
-          -d "client_secret=$$CLIENT_SECRET" \
+          -d "client_id=$CLIENT_ID" \
+          -d "client_secret=$CLIENT_SECRET" \
           -d "scope=all-apis")
         
         if echo "$$RESPONSE" | jq -e '.access_token' >/dev/null 2>&1; then
@@ -102,18 +105,21 @@ steps:
         # GCP SA impersonation (for any GCP ops)
         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 
-        # Databricks provider environment variables (clean approach - only env vars)  
-        export DATABRICKS_HOST="https://accounts.gcp.databricks.com" # gitleaks:allow
-        export DATABRICKS_ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
-        export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        # Databricks configuration (defined once, used by both provider and workspace)
+        ACCOUNT_ID="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
+        CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow 
+        CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+        
+        # Set both TF_VAR (for workspace resource) and DATABRICKS env vars (for provider)
+        export TF_VAR_databricks_account_id="$ACCOUNT_ID"
+        export DATABRICKS_HOST="https://accounts.gcp.databricks.com"
+        export DATABRICKS_ACCOUNT_ID="$$ACCOUNT_ID"
+        export DATABRICKS_CLIENT_ID="$$CLIENT_ID" 
+        export DATABRICKS_CLIENT_SECRET="$$CLIENT_SECRET"
 
         # Test credentials before apply (separate container from plan step)
-        echo "Testing Databricks credentials before apply..."
-        export CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
-        export CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
-        
-        RESPONSE=$$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/e11e38c5-a449-47b9-b37f-0fa36c821612/v1/token" \
+        echo "Testing Databricks credentials before apply..."        
+        RESPONSE=$(curl -sS -X POST "https://accounts.gcp.databricks.com/oidc/accounts/$ACCOUNT_ID/v1/token" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           -d "grant_type=client_credentials" \
           -d "client_id=$$CLIENT_ID" \
@@ -121,7 +127,7 @@ steps:
           -d "scope=all-apis")
         
         if echo "$$RESPONSE" | jq -e '.access_token' >/dev/null 2>&1; then
-          echo "✅ Credentials work in apply step! Token expires in: $$(echo "$$RESPONSE" | jq -r '.expires_in') seconds"
+          echo "✅ Credentials work in apply step! Token expires in: $(echo "$$RESPONSE" | jq -r '.expires_in') seconds"
         else
           echo "❌ Credential test failed in apply step. Response:"
           echo "$$RESPONSE"
