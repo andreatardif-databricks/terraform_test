@@ -37,7 +37,7 @@ steps:
          export TF_LOG=DEBUG
          terraform plan -input=false -compact-warnings -out=tfplan.out
 
-  # 3) terraform apply
+  # 3) terraform apply test
   - id: terraform-apply
     name: hashicorp/terraform:1.6.6
     entrypoint: sh
