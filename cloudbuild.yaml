@@ -1,10 +1,28 @@
 substitutions:
-  _TARGET_SA: andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+  _TARGET_SA: "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+  _TF_VERSION: "1.6.6"
+  # optional, handy to verify the subnet has the right secondary ranges:
+  _PROJECT: "fe-dev-sandbox"
+  _REGION: "us-east1"
+  _SUBNET_NAME: "hk-test-dbx-6e7ehf"
 
 steps:
-  # 1) Mint a token and save it for later steps
-  - id: mint-token
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  # 0) Install Terraform into /workspace/bin (persists across steps)
+  - id: setup-terraform
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+        mkdir -p /workspace/bin
+        curl -fsSL "https://releases.hashicorp.com/terraform/${_TF_VERSION}/terraform_${_TF_VERSION}_linux_amd64.zip" -o /workspace/terraform.zip
+        unzip -o /workspace/terraform.zip -d /workspace/bin >/dev/null
+        /workspace/bin/terraform -version
+
+  # 1) Impersonate your deployer SA and stash a fresh access token
+  - id: auth-check
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
     entrypoint: bash
     args:
       - -lc
@@ -12,33 +30,66 @@ steps:
         set -euo pipefail
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         ACCESS_TOKEN="$(gcloud auth print-access-token)"
-        printf '%s' "$$ACCESS_TOKEN" > /workspace/google_access_token.txt
+        printf '%s' "${ACCESS_TOKEN}" > /workspace/google_access_token.txt
 
-  # 2) Terraform init/plan/apply in the hashicorp image, reading the token file
-  - id: terraform-init
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
+  # 2) (Optional but useful) verify subnet & secondary range names
+  - id: network-verify
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    entrypoint: bash
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
+        set -euo pipefail
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        echo "Describing subnet ${_SUBNET_NAME} in ${_REGION} (project ${_PROJECT})..."
+        gcloud compute networks subnets describe "${_SUBNET_NAME}" \
+          --region="${_REGION}" --project="${_PROJECT}" \
+          --format="yaml(name,region,network,secondaryIpRanges)"
+
+  # 3) terraform init
+  - id: terraform-init
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+        export PATH="/workspace/bin:$PATH"
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        # If you pass TF vars via build env/secrets, source them here:
+        # set -a; [ -f /workspace/tfvars.env ] && source /workspace/tfvars.env; set +a
         terraform init -upgrade
 
+  # 4) terraform plan
   - id: terraform-plan
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    entrypoint: bash
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
+        set -euo pipefail
+        export PATH="/workspace/bin:$PATH"
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        # refresh token (good practice before long operations)
+        printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
         terraform plan -input=false -compact-warnings -out=tfplan.out
 
+  # 5) terraform apply
   - id: terraform-apply
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:latest
+    entrypoint: bash
     args:
       - -lc
       - |
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
+        set -euo pipefail
+        export PATH="/workspace/bin:$PATH"
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
         export TF_LOG=INFO
         terraform apply -input=false -auto-approve tfplan.out
+
+# Optionally set a timeout if your plan/apply may take a while
+# timeout: "3600s"
