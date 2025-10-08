@@ -49,5 +49,7 @@ steps:
       - -lc
       - |
         echo "Applying Terraform plan..."
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
         export TF_LOG="DEBUG"
         terraform apply -input=false -auto-approve tfplan.out
