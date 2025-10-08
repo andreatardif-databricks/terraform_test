@@ -58,6 +58,14 @@ steps:
          set -euo pipefail
          gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
          export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
+         
+         # Databricks OAuth credentials
+         export TF_VAR_databricks_account_id="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
+         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+         export TF_VAR_databricks_sp_client_secret="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+         export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+         
          /workspace/bin/terraform plan -input=false -compact-warnings -out=tfplan.out
 
   # 5) terraform apply
@@ -70,5 +78,13 @@ steps:
          set -euo pipefail
          gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
          export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
+         
+         # Databricks OAuth credentials
+         export TF_VAR_databricks_account_id="e11e38c5-a449-47b9-b37f-0fa36c821612" # gitleaks:allow
+         export TF_VAR_databricks_sp_client_id="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+         export TF_VAR_databricks_sp_client_secret="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+         export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
+         export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
+         
          export TF_LOG=INFO
          /workspace/bin/terraform apply -input=false -auto-approve tfplan.out
