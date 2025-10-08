@@ -22,4 +22,3 @@ databricks_sp_client_secret  = "dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks
 # gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
 # export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
 
-
