@@ -66,6 +66,7 @@ steps:
          export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
          export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
          
+         export TF_LOG=DEBUG
          /workspace/bin/terraform plan -input=false -compact-warnings -out=tfplan.out
 
   # 5) terraform apply
@@ -86,5 +87,5 @@ steps:
          export DATABRICKS_CLIENT_ID="9e52f02e-3246-4b6b-aca2-de6b7b849f4d" # gitleaks:allow
          export DATABRICKS_CLIENT_SECRET="dose078de60adfb9442b5d16caa7d2e85ecb" # gitleaks:allow
          
-         export TF_LOG=INFO
+         export TF_LOG=DEBUG
          /workspace/bin/terraform apply -input=false -auto-approve tfplan.out
