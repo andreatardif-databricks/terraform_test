@@ -1,11 +1,3 @@
-substitutions:
-  _TARGET_SA: "andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
-  _TF_VERSION: "1.6.6"
-  # optional, handy to verify the subnet has the right secondary ranges:
-  _PROJECT: "fe-dev-sandbox"
-  _REGION: "us-east1"
-  _SUBNET_NAME: "hk-test-dbx-6e7ehf"
-
 steps:
   # 0) Install Terraform into /workspace/bin (persists across steps)
   - id: setup-terraform
@@ -28,7 +20,7 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        gcloud config set auth/impersonate_service_account $${_TARGET_SA}
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
         ACCESS_TOKEN="$$(gcloud auth print-access-token)"
         printf '%s' "$${ACCESS_TOKEN}" > /workspace/google_access_token.txt
 
@@ -40,10 +32,10 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        gcloud config set auth/impersonate_service_account $${_TARGET_SA}
-        echo "Describing subnet $${_SUBNET_NAME} in $${_REGION} (project $${_PROJECT})..."
-        gcloud compute networks subnets describe "$${_SUBNET_NAME}" \
-          --region="$${_REGION}" --project="${_PROJECT}" \
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        echo "Describing subnet hk-test-dbx-6e7ehf in us-east1 (project fe-dev-sandbox)..."
+        gcloud compute networks subnets describe "hk-test-dbx-6e7ehf" \
+          --region="us-east1" --project="fe-dev-sandbox" \
           --format="yaml(name,region,network,secondaryIpRanges)"
 
   # 3) terraform init
@@ -53,9 +45,6 @@ steps:
     args:
       - -lc
       - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account $${_TARGET_SA}
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$$(cat /workspace/google_access_token.txt)"
         terraform init -upgrade
 
   # 4) terraform plan
@@ -66,9 +55,8 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
-        printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
         terraform plan -input=false -compact-warnings -out=tfplan.out
 
   # 5) terraform apply
@@ -79,11 +67,7 @@ steps:
       - -lc
       - |
         set -euo pipefail
-        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
-        printf '%s' "$(gcloud auth print-access-token)" > /workspace/google_access_token.txt
-        export GOOGLE_OAUTH_ACCESS_TOKEN="$(cat /workspace/google_access_token.txt)"
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
         export TF_LOG=INFO
         terraform apply -input=false -auto-approve tfplan.out
-
-# Optionally set a timeout if your plan/apply may take a while
-# timeout: "3600s"
