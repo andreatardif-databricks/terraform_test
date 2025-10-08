@@ -9,7 +9,9 @@ steps:
     args:
       - -lc
       - |
+        export TF_LOG=DEBUG
         terraform init
+        terraform plan -out=tfplan
         terraform apply -auto-approve
 
 # steps:
