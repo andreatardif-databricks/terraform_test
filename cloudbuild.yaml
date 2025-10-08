@@ -7,8 +7,8 @@ steps:
       - login
       - --host
       - https://accounts.gcp.databricks.com
-      - --profile
-      - databricks-gcp-account
+      - --account-id
+      - e11e38c5-a449-47b9-b37f-0fa36c821612 # gitleaks:allow
 
   # Step 1: Initialize Terraform
   - id: terraform-init
