@@ -2,12 +2,13 @@ steps:
   # Step 0: Auth Databricks
   - id: databricks-auth
     name: hashicorp/terraform:1.6.6
-    entrypoint: bash
+    entrypoint: sh
     args:
       - -lc
       - |
         echo "Authenticating with Databricks..."
         databricks auth login --profile databricks-gcp-account
+
   # Step 1: Initialize Terraform
   - id: terraform-init
     name: hashicorp/terraform:1.6.6
