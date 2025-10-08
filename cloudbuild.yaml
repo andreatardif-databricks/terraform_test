@@ -5,12 +5,13 @@ steps:
     entrypoint: bash
     args:
       - -lc
-      - |
-        set -euo pipefail
-        mkdir -p /workspace/bin
-        curl -fsSL "https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip" -o /workspace/terraform.zip
-        unzip -o /workspace/terraform.zip -d /workspace/bin >/dev/null
-        /workspace/bin/terraform -version
+       - |
+         set -euo pipefail
+         apt-get update && apt-get install -y unzip
+         mkdir -p /workspace/bin
+         curl -fsSL "https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip" -o /workspace/terraform.zip
+         unzip -o /workspace/terraform.zip -d /workspace/bin >/dev/null
+         /workspace/bin/terraform -version
 
   # 1) Impersonate your deployer SA and stash a fresh access token
   - id: auth-check
