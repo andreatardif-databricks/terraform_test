@@ -1,13 +1,12 @@
 steps:
-  # Step 0: Auth Databricks
+  # Step 0: Auth Databricks using the CLI
   - id: databricks-auth
     name: ghcr.io/databricks/cli:latest
-    entrypoint: sh
     args:
-      - -lc
-      - |
-        echo "Authenticating with Databricks..."
-        databricks auth login --profile databricks-gcp-account
+      - auth
+      - login
+      - --profile
+      - databricks-gcp-account
 
   # Step 1: Initialize Terraform
   - id: terraform-init
