@@ -55,10 +55,10 @@ steps:
     args:
       - -lc
       - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
-        terraform plan -input=false -compact-warnings -out=tfplan.out
+         set -euo pipefail
+         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+         export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
+         /workspace/bin/terraform plan -input=false -compact-warnings -out=tfplan.out
 
   # 5) terraform apply
   - id: terraform-apply
@@ -67,8 +67,8 @@ steps:
     args:
       - -lc
       - |
-        set -euo pipefail
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
-        export TF_LOG=INFO
-        terraform apply -input=false -auto-approve tfplan.out
+         set -euo pipefail
+         gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+         export GOOGLE_OAUTH_ACCESS_TOKEN=$$(gcloud auth print-access-token)
+         export TF_LOG=INFO
+         /workspace/bin/terraform apply -input=false -auto-approve tfplan.out
