@@ -10,12 +10,12 @@ variable "gke_master_ip_range" {}
 resource "databricks_mws_networks" "this" {
   provider     = databricks.accounts
   account_id   = var.databricks_account_id
-  network_name = "${var.google_project_name}-nw-${random_string.suffix.result}"
+  network_name = "fe-dev-sandbox-nw-d8epy1"
   gcp_network_info {
-    network_project_id    = var.google_project_name
-    vpc_id                = var.google_vpc_id
-    subnet_id             = var.gke_node_subnet
-    subnet_region         = var.google_region
+    network_project_id = "fe-dev-sandbox"
+    vpc_id             = "projects/fe-dev-sandbox/global/networks/hk-network-6e7ehf"
+    subnet_id          = "projects/fe-dev-sandbox/regions/us-east1/subnetworks/hk-test-dbx-6e7ehf"
+    subnet_region      = "us-east1"
   }
 }
 

@@ -1,47 +1,58 @@
 options:
       logging: CLOUD_LOGGING_ONLY
-
 steps:
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    id: verify-oidc
-    entrypoint: bash
+  - name: hashicorp/terraform:1.6.6
+    id: terraform-apply
+    env:
+      - GOOGLE_IMPERSONATE_SERVICE_ACCOUNT=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+    entrypoint: sh
     args:
       - -lc
       - |
-        gcloud auth print-identity-token \
-          --impersonate-service-account=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com \
-          --audiences=https://accounts.google.com \
-          --include-email | cut -c1-80 && echo '...'
+        terraform init
+        terraform apply -auto-approve
+
+# steps:
+#   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+#     id: verify-oidc
+#     entrypoint: bash
+#     args:
+#       - -lc
+#       - |
+#         gcloud auth print-identity-token \
+#           --impersonate-service-account=andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com \
+#           --audiences=https://accounts.google.com \
+#           --include-email | cut -c1-80 && echo '...'
         
-  # 1) terraform init
-  - id: terraform-init
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
-    args:
-      - -lc
-      - |
-        echo "Initializing Terraform configuration..."
-        export TF_LOG=DEBUG
-        terraform init -upgrade
+#   # 1) terraform init
+#   - id: terraform-init
+#     name: hashicorp/terraform:1.6.6
+#     entrypoint: sh
+#     args:
+#       - -lc
+#       - |
+#         echo "Initializing Terraform configuration..."
+#         export TF_LOG=DEBUG
+#         terraform init -upgrade
 
-  # 2) terraform plan
-  - id: terraform-plan
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
-    args:
-      - -lc
-      - |
-         echo "Planning Terraform configuration..."
-         export TF_LOG=DEBUG
-         terraform plan -input=false -compact-warnings -out=tfplan.out
+#   # 2) terraform plan
+#   - id: terraform-plan
+#     name: hashicorp/terraform:1.6.6
+#     entrypoint: sh
+#     args:
+#       - -lc
+#       - |
+#          echo "Planning Terraform configuration..."
+#          export TF_LOG=DEBUG
+#          terraform plan -input=false -compact-warnings -out=tfplan.out
 
-  # 3) terraform apply test
-  - id: terraform-apply
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
-    args:
-      - -lc
-      - |
-        echo "Applying Terraform configuration..."
-        export TF_LOG=DEBUG
-        terraform apply -input=false -auto-approve tfplan.out
+#   # 3) terraform apply test
+#   - id: terraform-apply
+#     name: hashicorp/terraform:1.6.6
+#     entrypoint: sh
+#     args:
+#       - -lc
+#       - |
+#         echo "Applying Terraform configuration..."
+#         export TF_LOG=DEBUG
+#         terraform apply -input=false -auto-approve tfplan.out
