@@ -18,6 +18,7 @@ steps:
       - |
         set -euo pipefail
         echo "Verifying GCP authentication..."
+        gcloud auth application-default login
         gcloud auth list --filter=status:ACTIVE --format="value(account)"
         gcloud config list project --format="value(core.project)"
 
@@ -49,4 +50,5 @@ steps:
       - -lc
       - |
         echo "Applying Terraform plan..."
+        export TF_LOG="DEBUG"
         terraform apply -input=false -auto-approve tfplan.out
