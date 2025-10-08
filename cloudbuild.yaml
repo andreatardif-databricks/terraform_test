@@ -1,4 +1,16 @@
 steps:
+  # 0) Bootstrap impersonation (safe to re-run)
+  - id: grant-impersonation
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: sh
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+        # grant TokenCreator to Cloud Build SA
+        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
+        
   # Step 1: Initialize Terraform
   - id: terraform-init
     name: hashicorp/terraform:1.6.6
