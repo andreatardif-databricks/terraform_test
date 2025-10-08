@@ -18,7 +18,7 @@ steps:
       - |
         set -euo pipefail
         echo "Verifying GCP authentication..."
-        gcloud auth application-default login
+        gcloud auth application-default login --quiet
         gcloud auth list --filter=status:ACTIVE --format="value(account)"
         gcloud config list project --format="value(core.project)"
 
