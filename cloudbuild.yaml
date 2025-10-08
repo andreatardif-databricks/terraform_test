@@ -1,6 +1,73 @@
 options:
       logging: CLOUD_LOGGING_ONLY
 steps:
+  # 0) Inspect & (optionally) prune big IAM bindings BEFORE Terraform
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: iam-diagnose-and-prune
+    entrypoint: bash
+    env:
+      - PROJECT_ID=fe-dev-sandbox
+      - APPLY_PRUNE=${APPLY_PRUNE:-false}   # set to "true" in trigger vars ONLY when you’re ready
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+
+        echo "== Dump current policy =="
+        gcloud projects get-iam-policy "$PROJECT_ID" --format=json > policy.json
+
+        echo "== Top 30 largest bindings =="
+        jq -r '
+          .bindings
+          | to_entries
+          | map(. + {len: ((.value|tostring)|length)})
+          | sort_by(-.len)
+          | .[0:30]
+          | .[]
+          | "IDX=\(.key)  SIZE=\(.len)  ROLE=\(.value.role)  MEMBERS=\(.value.members|length)  COND_TITLE=\(.value.condition.title // "none")"
+        ' policy.json
+
+        if [[ "$APPLY_PRUNE" != "true" ]]; then
+          echo "Dry-run only. Set APPLY_PRUNE=true to apply pruning."
+          exit 0
+        fi
+
+        echo "== BEGIN PRUNE: remove obvious overlaps for the impersonated SA =="
+        MEMBER="serviceAccount:andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com"
+        # Remove unneeded roles you listed earlier (safe to re-run)
+        for ROLE in \
+          roles/cloudbuild.connectionAdmin \
+          roles/run.admin \
+          roles/serviceusage.serviceUsageAdmin \
+          roles/iam.serviceAccountAdmin \
+          roles/iam.workloadIdentityUser \
+          roles/cloudbuild.loggingServiceAgent \
+          roles/compute.instanceAdmin.v1 \
+          roles/compute.networkAdmin \
+          roles/compute.securityAdmin \
+          roles/logging.configWriter
+        do
+          gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member="$MEMBER" --role="$ROLE" || true
+        done
+
+        echo "== OPTIONAL targeted prune of very large conditioned bindings =="
+        # Example: drop bindings whose condition titles match old Databricks bucket guards you know are stale.
+        # Edit the substrings below to match YOUR stale entries.
+        # This only prunes in-memory; we write a new policy file and then apply it.
+        jq '
+          .bindings |= map(select(
+            # keep everything EXCEPT items whose condition.title matches these stale patterns
+            (.condition.title // "") 
+            | test("hls-demo-only|databricks-partners-only") 
+            | not
+          ))
+        ' policy.json > policy_pruned.json
+
+        echo "== Validate & apply pruned policy =="
+        jq . policy_pruned.json >/dev/null
+        gcloud projects set-iam-policy "$PROJECT_ID" policy_pruned.json
+
+  # 1) Terraform as you already have it
   - name: hashicorp/terraform:1.6.6
     id: terraform-apply
     env:
@@ -11,7 +78,9 @@ steps:
       - |
         export TF_LOG=DEBUG
         terraform init
+        terraform plan -out=tfplan
         terraform apply -auto-approve
+
 
 # steps:
 #   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
