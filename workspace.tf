@@ -10,7 +10,7 @@ variable "gke_master_ip_range" {}
 resource "databricks_mws_networks" "this" {
   provider     = databricks.accounts
   account_id   = var.databricks_account_id
-  network_name = "${var.google_shared_vpc_project}-nw-${random_string.databricks_suffix.result}"
+  network_name = "${var.google_shared_vpc_project}-nw-${random_string.suffix.result}"
   gcp_network_info {
     network_project_id    = var.google_project_name
     vpc_id                = var.google_vpc_id
