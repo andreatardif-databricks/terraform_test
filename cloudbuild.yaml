@@ -26,7 +26,6 @@ steps:
         set -euo pipefail
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
-        export PATH="/workspace/bin:$PATH"
         terraform init -upgrade
 
   # terraform plan
@@ -39,7 +38,6 @@ steps:
         set -euo pipefail
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
-        export PATH="/workspace/bin:$PATH"
         terraform plan -input=false -compact-warnings -out=tfplan.out
 
   # terraform apply
@@ -53,5 +51,4 @@ steps:
         gcloud config set auth/impersonate_service_account ${_TARGET_SA}
         export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
         export TF_LOG=INFO
-        export PATH="/workspace/bin:$PATH"
         terraform apply -input=false -auto-approve tfplan.out
