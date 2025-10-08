@@ -1,55 +1,57 @@
-steps:
-  # 0) Bootstrap impersonation (safe to re-run)
-  - id: grant-impersonation
-    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: sh
-    args:
-      - -lc
-      - |
-        echo "Initializing impersonation..."
-        # grant TokenCreator to Cloud Build SA
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
+substitutions:
+  _TARGET_SA: andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
+  _TF_VERSION: "1.6.6"
 
-  # Step 1: Initialize Terraform
-  - id: terraform-init
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
+steps:
+  # Install terraform once
+  - id: setup-terraform
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
     args:
       - -lc
       - |
-        echo "Initializing Terraform..."
+        set -euo pipefail
+        mkdir -p /workspace/bin
+        curl -fsSL "https://releases.hashicorp.com/terraform/${_TF_VERSION}/terraform_${_TF_VERSION}_linux_amd64.zip" -o /workspace/terraform.zip
+        unzip -o /workspace/terraform.zip -d /workspace/bin
+        /workspace/bin/terraform -version
+
+  # terraform init
+  - id: terraform-init
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        set -euo pipefail
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+        export PATH="/workspace/bin:$PATH"
         terraform init -upgrade
 
-  # Step 2: Validate the Terraform configuration
-  - id: terraform-validate
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
-    args:
-      - -lc
-      - |
-        echo "Validating Terraform configuration..."
-        terraform validate
-
-  # Step 3: Generate Terraform plan and save it to a file
+  # terraform plan
   - id: terraform-plan
-    name: hashicorp/terraform:1.6.6
-    entrypoint: sh
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
     args:
       - -lc
       - |
-        echo "Running Terraform plan..."
-        terraform plan  -input=false -compact-warnings -out=tfplan.out
+        set -euo pipefail
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+        export PATH="/workspace/bin:$PATH"
+        terraform plan -input=false -compact-warnings -out=tfplan.out
 
-  # Step 4: Apply the saved plan automatically
+  # terraform apply
   - id: terraform-apply
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
-    entrypoint: sh
+    entrypoint: bash
     args:
       - -lc
       - |
-        echo "Applying Terraform plan..."
-        gcloud config set auth/impersonate_service_account andrea-tardif-sa@fe-dev-sandbox.iam.gserviceaccount.com
-        export GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token)
-        export TF_LOG="DEBUG"
+        set -euo pipefail
+        gcloud config set auth/impersonate_service_account ${_TARGET_SA}
+        export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
+        export TF_LOG=INFO
+        export PATH="/workspace/bin:$PATH"
         terraform apply -input=false -auto-approve tfplan.out
