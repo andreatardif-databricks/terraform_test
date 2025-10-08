@@ -2,6 +2,19 @@ options:
       logging: CLOUD_LOGGING_ONLY
 
 steps:
+  - id: whoami
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -lc
+      - |
+        curl -s -H "Metadata-Flavor: Google" \
+          http://metadata/computeMetadata/v1/instance/service-accounts/default/email
+        echo
+        gcloud auth list
+        echo "Sample identity token (truncated):"
+        gcloud auth print-identity-token | cut -c1-40
+        
   # 1) terraform init
   - id: terraform-init
     name: hashicorp/terraform:1.6.6
