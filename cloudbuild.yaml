@@ -7,14 +7,14 @@ steps:
     entrypoint: bash
     env:
       - PROJECT_ID=fe-dev-sandbox
-      - APPLY_PRUNE=${APPLY_PRUNE:-false}   # set to "true" in trigger vars ONLY when you’re ready
+      - APPLY_PRUNE=$${APPLY_PRUNE:-false}   # set to "true" in trigger vars ONLY when you’re ready
     args:
       - -lc
       - |
         set -euo pipefail
 
         echo "== Dump current policy =="
-        gcloud projects get-iam-policy "$PROJECT_ID" --format=json > policy.json
+        gcloud projects get-iam-policy "$${PROJECT_ID}" --format=json > policy.json
 
         echo "== Top 30 largest bindings =="
         jq -r '
@@ -27,7 +27,7 @@ steps:
           | "IDX=\(.key)  SIZE=\(.len)  ROLE=\(.value.role)  MEMBERS=\(.value.members|length)  COND_TITLE=\(.value.condition.title // "none")"
         ' policy.json
 
-        if [[ "$APPLY_PRUNE" != "true" ]]; then
+        if [[ "$${APPLY_PRUNE}" != "true" ]]; then
           echo "Dry-run only. Set APPLY_PRUNE=true to apply pruning."
           exit 0
         fi
@@ -47,7 +47,7 @@ steps:
           roles/compute.securityAdmin \
           roles/logging.configWriter
         do
-          gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member="$MEMBER" --role="$ROLE" || true
+          gcloud projects remove-iam-policy-binding "$${PROJECT_ID}" --member="$${MEMBER}" --role="$${ROLE}" || true
         done
 
         echo "== OPTIONAL targeted prune of very large conditioned bindings =="
@@ -65,7 +65,7 @@ steps:
 
         echo "== Validate & apply pruned policy =="
         jq . policy_pruned.json >/dev/null
-        gcloud projects set-iam-policy "$PROJECT_ID" policy_pruned.json
+        gcloud projects set-iam-policy "$${PROJECT_ID}" policy_pruned.json
 
   # 1) Terraform as you already have it
   - name: hashicorp/terraform:1.6.6
